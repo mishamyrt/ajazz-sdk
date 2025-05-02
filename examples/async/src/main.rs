@@ -1,8 +1,8 @@
 use std::time::Duration;
 use image::open;
 
-use elgato_streamdeck::{DeviceStateUpdate, list_devices, new_hidapi, AsyncStreamDeck};
-use elgato_streamdeck::images::{convert_image_with_format, ImageRect};
+use ajazz_rs::{DeviceStateUpdate, list_devices, new_hidapi, AsyncAjazz};
+use ajazz_rs::images::{convert_image_with_format, ImageRect};
 use tokio::time::sleep;
 
 #[tokio::main]
@@ -11,11 +11,11 @@ async fn main() {
     match new_hidapi() {
         Ok(hid) => {
             // Refresh device list
-            for (kind, serial) in list_devices(&hid, false) {
+            for (kind, serial) in list_devices(&hid) {
                 println!("{:?} {} {}", kind, serial, kind.product_id());
 
                 // Connect to the device
-                let device = AsyncStreamDeck::connect(&hid, kind, &serial).expect("Failed to connect");
+                let device = AsyncAjazz::connect(&hid, kind, &serial).expect("Failed to connect");
                 // Print out some info from the device
                 println!("Connected to '{}' with version '{}'", device.serial_number().await.unwrap(), device.firmware_version().await.unwrap());
 
@@ -23,7 +23,7 @@ async fn main() {
                 device.clear_all_button_images().await.unwrap();
 
                 // Use image-rs to load an image
-                let image = open("no-place-like-localhost.jpg").unwrap();
+                let image = open("frame.jpg").unwrap();
                 let alternative = image.grayscale().brighten(-50);
 
                 // device.set_logo_image(image.clone()).await.unwrap();
@@ -32,17 +32,6 @@ async fn main() {
                 // Write it to the device
                 for i in 0..kind.key_count() as u8 {
                     device.set_button_image(i, image.clone()).await.unwrap();
-                }
-
-                println!("Touch point count: {}", kind.touchpoint_count());
-                for i in 0..kind.touchpoint_count() as u8 {
-                    device.set_touchpoint_color(i, 255, 255, 255).await.unwrap();
-                }
-
-                if let Some(format) = device.kind().lcd_image_format() {
-                    let scaled_image = image.clone().resize_to_fill(format.size.0 as u32, format.size.1 as u32, image::imageops::FilterType::Nearest);
-                    let converted_image = convert_image_with_format(format, scaled_image).unwrap();
-                    let _ = device.write_lcd_fill(&converted_image).await;
                 }
 
                 let small = match device.kind().lcd_strip_size() {
@@ -94,9 +83,6 @@ async fn main() {
                             }
                             DeviceStateUpdate::ButtonUp(key) => {
                                 println!("Button {} up", key);
-                                if key == device.kind().key_count() - 1 {
-                                    break 'infinite;
-                                }
                             }
                             DeviceStateUpdate::EncoderTwist(dial, ticks) => {
                                 println!("Dial {} twisted by {}", dial, ticks);
@@ -106,28 +92,6 @@ async fn main() {
                             }
                             DeviceStateUpdate::EncoderUp(dial) => {
                                 println!("Dial {} up", dial);
-                            }
-
-                            DeviceStateUpdate::TouchPointDown(point) => {
-                                println!("Touch point {} down", point);
-                            }
-                            DeviceStateUpdate::TouchPointUp(point) => {
-                                println!("Touch point {} up", point);
-                            }
-
-                            DeviceStateUpdate::TouchScreenPress(x, y) => {
-                                println!("Touch Screen press at {x}, {y}");
-                                if let Some(small) = &small {
-                                    device.write_lcd(x, y, small).await.unwrap();
-                                }
-                            }
-
-                            DeviceStateUpdate::TouchScreenLongPress(x, y) => {
-                                println!("Touch Screen long press at {x}, {y}")
-                            }
-
-                            DeviceStateUpdate::TouchScreenSwipe((sx, sy), (ex, ey)) => {
-                                println!("Touch Screen swipe from {sx}, {sy} to {ex}, {ey}")
                             }
                         }
                     }

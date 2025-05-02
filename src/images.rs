@@ -1,11 +1,8 @@
-#[allow(unused_imports)]
-use std::sync::Arc;
 use image::{ColorType, DynamicImage, GenericImageView, ImageError};
-use image::codecs::bmp::BmpEncoder;
 use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
 
-use crate::{Kind, StreamDeckError};
+use crate::{Kind, AjazzError};
 use crate::info::{ImageFormat, ImageMirroring, ImageMode, ImageRotation};
 
 /// Converts image into image data depending on provided kind of device
@@ -41,12 +38,6 @@ pub fn convert_image_with_format(image_format: ImageFormat, image: DynamicImage)
     // Encoding image
     match image_format.mode {
         ImageMode::None => Ok(vec![]),
-        ImageMode::BMP => {
-            let mut buf = Vec::new();
-            let mut encoder = BmpEncoder::new(&mut buf);
-            encoder.encode(&image_data, ws as u32, hs as u32, ColorType::Rgb8.into())?;
-            Ok(buf)
-        }
         ImageMode::JPEG => {
             let mut buf = Vec::new();
             let mut encoder = JpegEncoder::new_with_quality(&mut buf, 90);
@@ -59,14 +50,14 @@ pub fn convert_image_with_format(image_format: ImageFormat, image: DynamicImage)
 /// Converts image into image data depending on provided kind of device, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
-pub fn convert_image_async(kind: Kind, image: DynamicImage) -> Result<Vec<u8>, StreamDeckError> {
+pub fn convert_image_async(kind: Kind, image: DynamicImage) -> Result<Vec<u8>, AjazzError> {
     Ok(tokio::task::block_in_place(move || convert_image(kind, image))?)
 }
 
 /// Converts image into image data depending on provided image format, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
-pub fn convert_image_with_format_async(format: ImageFormat, image: DynamicImage) -> Result<Vec<u8>, StreamDeckError> {
+pub fn convert_image_with_format_async(format: ImageFormat, image: DynamicImage) -> Result<Vec<u8>, AjazzError> {
     Ok(tokio::task::block_in_place(move || convert_image_with_format(format, image))?)
 }
 
@@ -84,7 +75,7 @@ pub struct ImageRect {
 
 impl ImageRect {
     /// Converts image to image rect
-    pub fn from_image(image: DynamicImage) -> Result<ImageRect, StreamDeckError> {
+    pub fn from_image(image: DynamicImage) -> Result<ImageRect, AjazzError> {
         let (image_w, image_h) = image.dimensions();
 
         let image_data = image.into_rgb8().to_vec();
@@ -103,7 +94,7 @@ impl ImageRect {
     /// Converts image to image rect, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
     #[cfg(feature = "async")]
     #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
-    pub fn from_image_async(image: DynamicImage) -> Result<ImageRect, StreamDeckError> {
+    pub fn from_image_async(image: DynamicImage) -> Result<ImageRect, AjazzError> {
         tokio::task::block_in_place(move || ImageRect::from_image(image))
     }
 }
