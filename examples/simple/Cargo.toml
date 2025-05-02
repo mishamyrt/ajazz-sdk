@@ -7,4 +7,4 @@ image = { version = "0.25.1", default-features = false, features = [
   "bmp",
   "jpeg",
 ] }
-ajazz-rs = { path = "../../" }
+ajazz-sdk = { path = "../../" }

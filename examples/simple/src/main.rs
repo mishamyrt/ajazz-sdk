@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use image::open;
 
-use ajazz_rs::{AjazzInput, list_devices, new_hidapi, Ajazz};
-use ajazz_rs::images::{convert_image_with_format, ImageRect};
+use ajazz_sdk::{AjazzInput, list_devices, new_hidapi, Ajazz};
+use ajazz_sdk::images::{convert_image_with_format, ImageRect};
 
 fn main() {
     // Create instance of HidApi

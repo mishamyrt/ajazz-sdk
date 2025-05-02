@@ -1,8 +1,8 @@
 use std::time::Duration;
 use image::open;
 
-use ajazz_rs::{DeviceStateUpdate, list_devices, new_hidapi, AsyncAjazz};
-use ajazz_rs::images::{convert_image_with_format, ImageRect};
+use ajazz_sdk::{DeviceStateUpdate, list_devices, new_hidapi, AsyncAjazz};
+use ajazz_sdk::images::{convert_image_with_format, ImageRect};
 use tokio::time::sleep;
 
 #[tokio::main]

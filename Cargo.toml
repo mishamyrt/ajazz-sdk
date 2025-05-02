@@ -1,13 +1,13 @@
 [package]
-name = "ajazz-rs"
+name = "ajazz-sdk"
 description = "HidApi driver for Ajazz devices"
-authors = ["TheJebForge"]
-version = "0.10.2"
+authors = ["TheJebForge", "mishamyrt"]
+version = "0.1.0"
 edition = "2021"
 readme = "README.md"
-homepage = "https://github.com/streamduck-org"
-repository = "https://github.com/streamduck-org/ajazz"
-license = "MPL-2.0"
+homepage = "https://github.com/mishamyrt/ajazz-sdk"
+repository = "https://github.com/mishamyrt/ajazz-sdk"
+license = "MIT"
 
 [dependencies]
 hidapi = "2.6"
