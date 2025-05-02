@@ -2,7 +2,7 @@
 name = "ajazz-sdk"
 description = "HidApi driver for Ajazz devices"
 authors = ["TheJebForge", "mishamyrt"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 readme = "README.md"
 homepage = "https://github.com/mishamyrt/ajazz-sdk"

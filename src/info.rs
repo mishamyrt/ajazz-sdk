@@ -117,6 +117,14 @@ impl Kind {
         }
     }
 
+    /// Amount of display keys the device has
+    pub fn display_key_count(&self) -> u8 {
+        match self {
+            Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => 6,
+            _ => self.key_count(),
+        }
+    }
+
     /// Amount of button rows the device has
     pub fn row_count(&self) -> u8 {
         match self {
