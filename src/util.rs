@@ -6,19 +6,10 @@ use crate::{Kind, AjazzError, AjazzInput};
 /// Performs get_feature_report on [HidDevice]
 pub fn get_feature_report(device: &HidDevice, report_id: u8, length: usize) -> Result<Vec<u8>, HidError> {
     let mut buff = vec![0u8; length];
-
-    // Inserting report id byte
     buff.insert(0, report_id);
 
-    // Getting feature report
     device.get_feature_report(buff.as_mut_slice())?;
-
     Ok(buff)
-}
-
-/// Performs send_feature_report on [HidDevice]
-pub fn send_feature_report(device: &HidDevice, payload: &[u8]) -> Result<(), HidError> {
-    device.send_feature_report(payload)
 }
 
 /// Reads data from [HidDevice]. Blocking mode is used if timeout is specified
@@ -45,61 +36,32 @@ pub fn extract_str(bytes: &[u8]) -> Result<String, Utf8Error> {
     Ok(from_utf8(bytes)?.replace('\0', "").to_string())
 }
 
-/*
- Ajazz AKP153x's key index
- -----------------------------
-| 0d | 0a | 07 | 04 | 01 | 10 |
-|----|----|----|----|----|----|
-| 0e | 0b | 08 | 05 | 02 | 11 |
-|----|----|----|----|----|----|
-| 0f | 0c | 09 | 06 | 03 | 12 |
- -----------------------------
+pub(crate) fn mirabox_image_packet(kind: &Kind, key: u8, image_data: &[u8]) -> Vec<u8> {
+    let mut buf: Vec<u8> = vec![
+            0x00,
+            0x43,
+            0x52,
+            0x54,
+            0x00,
+            0x00,
+            0x42,
+            0x41,
+            0x54,
+            0x00,
+            0x00,
+            (image_data.len() >> 8) as u8,
+            image_data.len() as u8,
+            key + 1,
+        ];
 
- Ajazz AKP815's key index
-  --------------
- | 0f | 0e | 0d |
- |----|----|----|
- | 0c | 0b | 0a |
- |----|----|----|
- | 09 | 08 | 07 |
- |----|----|----|
- | 06 | 05 | 04 |
- |----|----|----|
- | 03 | 02 | 01 |
-  --------------
+    mirabox_extend_packet(kind, &mut buf);
 
-*/
-
-/// Converts Elgato key index to Ajazz key index
-pub fn elgato_to_ajazz153(kind: &Kind, key: u8) -> u8 {
-    if key < kind.key_count() {
-        [12, 9, 6, 3, 0, 15, 13, 10, 7, 4, 1, 16, 14, 11, 8, 5, 2, 17][key as usize]
-    } else {
-        key
-    }
-}
-
-/// Converts Ajazz key index to Elgato key index
-pub fn ajazz153_to_elgato_input(kind: &Kind, key: u8) -> u8 {
-    if key < kind.key_count() {
-        [4, 10, 16, 3, 9, 15, 2, 8, 14, 1, 7, 13, 0, 6, 12, 5, 11, 17][key as usize]
-    } else {
-        key
-    }
-}
-
-/// Make last key index first, and first key index last
-pub fn inverse_key_index(kind: &Kind, key: u8) -> u8 {
-    if key < kind.key_count() {
-        kind.key_count() - 1 - key
-    } else {
-        key
-    }
+    buf
 }
 
 /// Extends buffer up to required packet length
 pub fn mirabox_extend_packet(kind: &Kind, buf: &mut Vec<u8>) {
-    let length = if kind.is_ajazz_v2() { 1025 } else { 513 };
+    let length = if kind.is_v2_api() { 1025 } else { 513 };
 
     buf.extend(vec![0u8; length - buf.len()]);
 }
@@ -144,7 +106,7 @@ pub fn ajazz03_read_input(kind: &Kind, input: u8, state: u8) -> Result<AjazzInpu
 
 fn ajazz03_read_button_press(kind: &Kind, input: u8, state: u8) -> Result<AjazzInput, AjazzError> {
     let mut button_states = vec![0x01];
-    button_states.extend(vec![0u8; (kind.key_count() + 1) as usize]);
+    button_states.extend(vec![0x00; (kind.key_count() + 1) as usize]);
 
     if input == 0 {
         return Ok(AjazzInput::ButtonStateChange(read_button_states(kind, &button_states)));

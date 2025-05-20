@@ -1,8 +1,10 @@
 use std::time::Duration;
 use image::open;
 
-use ajazz_sdk::{DeviceStateUpdate, list_devices, new_hidapi, AsyncAjazz};
-use ajazz_sdk::images::{convert_image_with_format, ImageRect};
+use ajazz_sdk::{
+    DeviceStateUpdate, list_devices, new_hidapi, convert_image_with_format, ImageRect,
+    AsyncAjazz,
+};
 use tokio::time::sleep;
 
 #[tokio::main]
@@ -15,9 +17,14 @@ async fn main() {
                 println!("{:?} {} {}", kind, serial, kind.product_id());
 
                 // Connect to the device
-                let device = AsyncAjazz::connect(&hid, kind, &serial).expect("Failed to connect");
+                let device =
+                    AsyncAjazz::connect(&hid, kind, &serial).expect("Failed to connect");
                 // Print out some info from the device
-                println!("Connected to '{}' with version '{}'", device.serial_number().await.unwrap(), device.firmware_version().await.unwrap());
+                println!(
+                    "Connected to '{}' with version '{}'",
+                    device.serial_number().await.unwrap(),
+                    device.firmware_version().await.unwrap()
+                );
 
                 device.set_brightness(50).await.unwrap();
                 device.clear_all_button_images().await.unwrap();
@@ -28,16 +35,19 @@ async fn main() {
 
                 // device.set_logo_image(image.clone()).await.unwrap();
 
-                println!("Key count: {}", kind.key_count());
+                println!("Key count: {}", kind.display_key_count());
                 // Write it to the device
-                for i in 0..kind.key_count() as u8 {
+                for i in 0..kind.display_key_count() as u8 {
                     device.set_button_image(i, image.clone()).await.unwrap();
                 }
 
                 let small = match device.kind().lcd_strip_size() {
                     Some((w, h)) => {
                         let min = w.min(h) as u32;
-                        let scaled_image = image.clone().resize_to_fill(min, min, image::imageops::Nearest);
+                        let scaled_image =
+                            image
+                                .clone()
+                                .resize_to_fill(min, min, image::imageops::Nearest);
                         Some(ImageRect::from_image(scaled_image).unwrap())
                     }
                     None => None,
@@ -53,8 +63,14 @@ async fn main() {
                     let mut previous = 0;
 
                     loop {
-                        device_clone.set_button_image(index, image.clone()).await.unwrap();
-                        device_clone.set_button_image(previous, alternative.clone()).await.unwrap();
+                        device_clone
+                            .set_button_image(index, image.clone())
+                            .await
+                            .unwrap();
+                        device_clone
+                            .set_button_image(previous, alternative.clone())
+                            .await
+                            .unwrap();
 
                         device_clone.flush().await.unwrap();
 
@@ -63,7 +79,7 @@ async fn main() {
                         previous = index;
 
                         index += 1;
-                        if index >= kind.key_count() as u8 {
+                        if index >= kind.display_key_count() as u8 {
                             index = 0;
                         }
                     }

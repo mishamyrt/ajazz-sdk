@@ -1,7 +1,6 @@
 //! Code from this module is using [block_in_place](tokio::task::block_in_place),
 //! and so they cannot be used in [current_thread](tokio::runtime::Builder::new_current_thread) runtimes
 
-use std::iter::zip;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -11,8 +10,10 @@ use tokio::sync::Mutex;
 use tokio::task::block_in_place;
 use tokio::time::sleep;
 
-use crate::{DeviceState, DeviceStateUpdate, Kind, list_devices, Ajazz, AjazzError, AjazzInput};
-use crate::images::{convert_image_async, ImageRect};
+use crate::{AjazzError, AjazzInput, DeviceState, DeviceStateUpdate, Kind};
+use crate::device::{handle_input_state_change, Ajazz};
+use crate::hid::list_devices;
+use crate::images::convert_image_async;
 
 /// Actually refreshes the device list, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
 pub fn refresh_device_list_async(hidapi: &mut HidApi) -> HidResult<()> {
@@ -27,7 +28,7 @@ pub fn list_devices_async(hidapi: &HidApi) -> Vec<(Kind, String)> {
     block_in_place(move || list_devices(hidapi))
 }
 
-/// Stream Deck interface suitable to be used in async, uses [block_in_place](block_in_place)
+/// Ajazz device interface suitable to be used in async, uses [block_in_place](block_in_place)
 /// so this wrapper cannot be used in [current_thread](tokio::runtime::Builder::new_current_thread) runtimes
 #[derive(Clone)]
 pub struct AsyncAjazz {
@@ -38,7 +39,11 @@ pub struct AsyncAjazz {
 /// Static functions of the struct
 impl AsyncAjazz {
     /// Attempts to connect to the device, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
-    pub fn connect(hidapi: &HidApi, kind: Kind, serial: &str) -> Result<AsyncAjazz, AjazzError> {
+    pub fn connect(
+        hidapi: &HidApi,
+        kind: Kind,
+        serial: &str,
+    ) -> Result<AsyncAjazz, AjazzError> {
         let device = block_in_place(move || Ajazz::connect(hidapi, kind, serial))?;
 
         Ok(AsyncAjazz {
@@ -106,13 +111,6 @@ impl AsyncAjazz {
         block_in_place(move || device.set_brightness(percent))
     }
 
-    /// Writes image data to Stream Deck device, changes must be flushed with `.flush()` before
-    /// they will appear on the device!
-    pub async fn write_image(&self, key: u8, image_data: &[u8]) -> Result<(), AjazzError> {
-        let device = self.device.lock().await;
-        block_in_place(move || device.write_image(key, image_data))
-    }
-
     /// Sets button's image to blank, changes must be flushed with `.flush()` before
     /// they will appear on the device!
     pub async fn clear_button_image(&self, key: u8) -> Result<(), AjazzError> {
@@ -129,11 +127,15 @@ impl AsyncAjazz {
 
     /// Sets specified button's image, changes must be flushed with `.flush()` before
     /// they will appear on the device!
-    pub async fn set_button_image(&self, key: u8, image: DynamicImage) -> Result<(), AjazzError> {
+    pub async fn set_button_image(
+        &self,
+        key: u8,
+        image: DynamicImage,
+    ) -> Result<(), AjazzError> {
         let image = convert_image_async(self.kind, image)?;
 
         let device = self.device.lock().await;
-        block_in_place(move || device.write_image(key, &image))
+        block_in_place(move || device.set_button_image_data(key, &image))
     }
 
     /// Set logo image
@@ -188,54 +190,9 @@ impl AsyncDeviceStateReader {
     /// Reads states and returns updates
     pub async fn read(&self, poll_rate: f32) -> Result<Vec<DeviceStateUpdate>, AjazzError> {
         let input = self.device.read_input(poll_rate).await?;
-        let mut my_states = self.states.lock().await;
+        let mut current_state = self.states.lock().await;
 
-        let mut updates = vec![];
-
-        match input {
-            AjazzInput::ButtonStateChange(buttons) => {
-                for (index, is_changed) in buttons.iter().enumerate() {
-                    if !is_changed {
-                        continue;
-                    }
-
-                    my_states.buttons[index] = !my_states.buttons[index];
-                    if my_states.buttons[index] {
-                        updates.push(DeviceStateUpdate::ButtonDown(index as u8));
-                    } else {
-                        updates.push(DeviceStateUpdate::ButtonUp(index as u8));
-                    }
-                }
-            }
-
-            AjazzInput::EncoderStateChange(encoders) => {
-                for (index, is_changed) in encoders.iter().enumerate() {
-                    if !is_changed {
-                        continue;
-                    }
-
-                    my_states.encoders[index] = !my_states.encoders[index];
-                    if my_states.encoders[index] {
-                        updates.push(DeviceStateUpdate::EncoderDown(index as u8));
-                    } else {
-                        updates.push(DeviceStateUpdate::EncoderUp(index as u8));
-                    }
-                }
-            }
-
-            AjazzInput::EncoderTwist(twist) => {
-                for (index, change) in twist.iter().enumerate() {
-                    if *change != 0 {
-                        updates.push(DeviceStateUpdate::EncoderTwist(index as u8, *change));
-                    }
-                }
-            }
-
-            _ => {}
-        }
-
-        drop(my_states);
-
+        let updates = handle_input_state_change(input, &mut current_state)?;
         Ok(updates)
     }
 }

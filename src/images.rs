@@ -3,7 +3,65 @@ use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
 
 use crate::{Kind, AjazzError};
-use crate::info::{ImageFormat, ImageMirroring, ImageMode, ImageRotation};
+
+/// Image rotation
+#[derive(Copy, Clone, Debug, Hash)]
+pub enum ImageRotation {
+    /// No rotation
+    Rot0,
+    /// 90 degrees clockwise
+    Rot90,
+    /// 180 degrees
+    Rot180,
+    /// 90 degrees counter-clockwise
+    Rot270,
+}
+
+/// Image mirroring
+#[derive(Copy, Clone, Debug, Hash)]
+pub enum ImageMirroring {
+    /// No image mirroring
+    None,
+    /// Flip by X
+    X,
+    /// Flip by Y
+    Y,
+    /// Flip by both axes
+    Both,
+}
+
+/// Image format
+#[derive(Copy, Clone, Debug, Hash)]
+pub enum ImageMode {
+    /// No image
+    None,
+    /// Jpeg image
+    JPEG,
+}
+
+/// Image format used by the device
+#[derive(Copy, Clone, Debug, Hash)]
+pub struct ImageFormat {
+    /// Image format/mode
+    pub mode: ImageMode,
+    /// Image size
+    pub size: (usize, usize),
+    /// Image rotation
+    pub rotation: ImageRotation,
+    /// Image mirroring
+    pub mirror: ImageMirroring,
+}
+
+impl Default for ImageFormat {
+    fn default() -> Self {
+        Self {
+            mode: ImageMode::None,
+            size: (0, 0),
+            rotation: ImageRotation::Rot0,
+            mirror: ImageMirroring::None,
+        }
+    }
+}
 
 /// Converts image into image data depending on provided kind of device
 pub fn convert_image(kind: Kind, image: DynamicImage) -> Result<Vec<u8>, ImageError> {
@@ -11,11 +69,12 @@ pub fn convert_image(kind: Kind, image: DynamicImage) -> Result<Vec<u8>, ImageEr
 }
 
 /// Converts image into image data depending on provided image format
-pub fn convert_image_with_format(image_format: ImageFormat, image: DynamicImage) -> Result<Vec<u8>, ImageError> {
+pub fn convert_image_with_format(
+    image_format: ImageFormat,
+    image: DynamicImage,
+) -> Result<Vec<u8>, ImageError> {
     // Ensuring size of the image
     let (ws, hs) = image_format.size;
-
-    let image = image.resize_exact(ws as u32, hs as u32, FilterType::Nearest);
 
     // Applying rotation
     let image = match image_format.rotation {
@@ -24,6 +83,8 @@ pub fn convert_image_with_format(image_format: ImageFormat, image: DynamicImage)
         ImageRotation::Rot180 => image.rotate180(),
         ImageRotation::Rot270 => image.rotate270(),
     };
+
+    let image = image.resize_exact(ws as u32, hs as u32, FilterType::Triangle);
 
     // Applying mirroring
     let image = match image_format.mirror {
@@ -51,14 +112,21 @@ pub fn convert_image_with_format(image_format: ImageFormat, image: DynamicImage)
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
 pub fn convert_image_async(kind: Kind, image: DynamicImage) -> Result<Vec<u8>, AjazzError> {
-    Ok(tokio::task::block_in_place(move || convert_image(kind, image))?)
+    Ok(tokio::task::block_in_place(move || {
+        convert_image(kind, image)
+    })?)
 }
 
 /// Converts image into image data depending on provided image format, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
-pub fn convert_image_with_format_async(format: ImageFormat, image: DynamicImage) -> Result<Vec<u8>, AjazzError> {
-    Ok(tokio::task::block_in_place(move || convert_image_with_format(format, image))?)
+pub fn convert_image_with_format_async(
+    format: ImageFormat,
+    image: DynamicImage,
+) -> Result<Vec<u8>, AjazzError> {
+    Ok(tokio::task::block_in_place(move || {
+        convert_image_with_format(format, image)
+    })?)
 }
 
 /// Rect to be used when trying to send image to lcd screen
@@ -96,5 +164,29 @@ impl ImageRect {
     #[cfg_attr(docsrs, doc(cfg(feature = "async")))]
     pub fn from_image_async(image: DynamicImage) -> Result<ImageRect, AjazzError> {
         tokio::task::block_in_place(move || ImageRect::from_image(image))
+    }
+}
+
+#[derive(Clone, Copy)]
+pub(crate) struct WriteImageParameters {
+    pub image_report_length: usize,
+    pub image_report_payload_length: usize,
+}
+
+impl WriteImageParameters {
+    pub fn for_kind(kind: Kind) -> Self {
+        let image_report_length = match kind {
+            kind if kind.is_v1_api() => 513,
+            kind if kind.is_v2_api() => 1025,
+            _ => 1024,
+        };
+
+        let image_report_header_length = 1;
+        let image_report_payload_length = image_report_length - image_report_header_length;
+
+        Self {
+            image_report_length,
+            image_report_payload_length,
+        }
     }
 }

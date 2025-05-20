@@ -1,38 +1,14 @@
-/// A Mirabox vendor ID
-pub const MIRABOX_VENDOR_ID_1: u16 = 0x5548;
+use crate::{
+    protocol::codes,
+    images::{ImageFormat, ImageMirroring, ImageMode, ImageRotation},
+};
 
-/// Product ID of Ajazz AKP153
-pub const PID_AJAZZ_AKP153: u16 = 0x6674;
-
-/// Product ID of Ajazz AKP815
-pub const PID_AJAZZ_AKP815: u16 = 0x6672;
-
-/// A Mirabox vendor ID
-pub const MIRABOX_VENDOR_ID_2: u16 = 0x0300;
-
-/// Product ID of Ajazz AKP153E
-pub const PID_AJAZZ_AKP153E: u16 = 0x1010;
-
-/// Product ID of Ajazz AKP153R
-pub const PID_AJAZZ_AKP153R: u16 = 0x1020;
-
-/// Product ID of Ajazz AKP03
-pub const PID_AJAZZ_AKP03: u16 = 0x1001;
-
-/// Product ID of Ajazz AKP03E
-pub const PID_AJAZZ_AKP03E: u16 = 0x3002;
-
-/// Product ID of Ajazz AKP03R
-pub const PID_AJAZZ_AKP03R: u16 = 0x1003;
-
-/// Product ID of Ajazz AKP03R rev 2
-pub const PID_AJAZZ_AKP03R_REV2: u16 = 0x3003;
-
-const RECOGNIZED_VENDORS: [u16; 2] = [MIRABOX_VENDOR_ID_1, MIRABOX_VENDOR_ID_2];
-
-/// Returns true for vendors IDs that are recognized by the library
-pub fn is_vendor_familiar(vendor: &u16) -> bool {
-    RECOGNIZED_VENDORS.contains(vendor)
+/// Returns true for vendors IDs that are handled by the library
+pub const fn is_mirabox_vendor(vendor: u16) -> bool {
+    matches!(
+        vendor,
+        codes::VENDOR_ID_MIRABOX_V1 | codes::VENDOR_ID_MIRABOX_V2
+    )
 }
 
 /// Enum describing kinds of Ajazz devices
@@ -58,21 +34,21 @@ pub enum Kind {
 
 impl Kind {
     /// Creates [Kind] variant from Vendor ID and Product ID
-    pub fn from_vid_pid(vid: u16, pid: u16) -> Option<Kind> {
+    pub const fn from_vid_pid(vid: u16, pid: u16) -> Option<Kind> {
         match vid {
-            MIRABOX_VENDOR_ID_1 => match pid {
-                PID_AJAZZ_AKP153 => Some(Kind::Akp153),
-                PID_AJAZZ_AKP815 => Some(Kind::Akp815),
+            codes::VENDOR_ID_MIRABOX_V1 => match pid {
+                codes::PID_AJAZZ_AKP153 => Some(Kind::Akp153),
+                codes::PID_AJAZZ_AKP815 => Some(Kind::Akp815),
                 _ => None,
             },
 
-            MIRABOX_VENDOR_ID_2 => match pid {
-                PID_AJAZZ_AKP153E => Some(Kind::Akp153E),
-                PID_AJAZZ_AKP153R => Some(Kind::Akp153R),
-                PID_AJAZZ_AKP03 => Some(Kind::Akp03),
-                PID_AJAZZ_AKP03E => Some(Kind::Akp03E),
-                PID_AJAZZ_AKP03R => Some(Kind::Akp03R),
-                PID_AJAZZ_AKP03R_REV2 => Some(Kind::Akp03RRev2),
+            codes::VENDOR_ID_MIRABOX_V2 => match pid {
+                codes::PID_AJAZZ_AKP153E => Some(Kind::Akp153E),
+                codes::PID_AJAZZ_AKP153R => Some(Kind::Akp153R),
+                codes::PID_AJAZZ_AKP03 => Some(Kind::Akp03),
+                codes::PID_AJAZZ_AKP03E => Some(Kind::Akp03E),
+                codes::PID_AJAZZ_AKP03R => Some(Kind::Akp03R),
+                codes::PID_AJAZZ_AKP03R_REV2 => Some(Kind::Akp03RRev2),
                 _ => None,
             },
 
@@ -81,35 +57,35 @@ impl Kind {
     }
 
     /// Retrieves Product ID of the device
-    pub fn product_id(&self) -> u16 {
+    pub const fn product_id(&self) -> u16 {
         match self {
-            Kind::Akp153 => PID_AJAZZ_AKP153,
-            Kind::Akp153E => PID_AJAZZ_AKP153E,
-            Kind::Akp153R => PID_AJAZZ_AKP153R,
-            Kind::Akp815 => PID_AJAZZ_AKP815,
-            Kind::Akp03 => PID_AJAZZ_AKP03,
-            Kind::Akp03E => PID_AJAZZ_AKP03E,
-            Kind::Akp03R => PID_AJAZZ_AKP03R,
-            Kind::Akp03RRev2 => PID_AJAZZ_AKP03R_REV2,
+            Kind::Akp153 => codes::PID_AJAZZ_AKP153,
+            Kind::Akp153E => codes::PID_AJAZZ_AKP153E,
+            Kind::Akp153R => codes::PID_AJAZZ_AKP153R,
+            Kind::Akp815 => codes::PID_AJAZZ_AKP815,
+            Kind::Akp03 => codes::PID_AJAZZ_AKP03,
+            Kind::Akp03E => codes::PID_AJAZZ_AKP03E,
+            Kind::Akp03R => codes::PID_AJAZZ_AKP03R,
+            Kind::Akp03RRev2 => codes::PID_AJAZZ_AKP03R_REV2,
         }
     }
 
     /// Retrieves Vendor ID
-    pub fn vendor_id(&self) -> u16 {
+    pub const fn vendor_id(&self) -> u16 {
         match self {
-            Kind::Akp153 => MIRABOX_VENDOR_ID_1,
-            Kind::Akp153E => MIRABOX_VENDOR_ID_2,
-            Kind::Akp153R => MIRABOX_VENDOR_ID_2,
-            Kind::Akp815 => MIRABOX_VENDOR_ID_1,
-            Kind::Akp03 => MIRABOX_VENDOR_ID_2,
-            Kind::Akp03E => MIRABOX_VENDOR_ID_2,
-            Kind::Akp03R => MIRABOX_VENDOR_ID_2,
-            Kind::Akp03RRev2 => MIRABOX_VENDOR_ID_2,
+            Kind::Akp153 => codes::VENDOR_ID_MIRABOX_V1,
+            Kind::Akp153E => codes::VENDOR_ID_MIRABOX_V2,
+            Kind::Akp153R => codes::VENDOR_ID_MIRABOX_V2,
+            Kind::Akp815 => codes::VENDOR_ID_MIRABOX_V1,
+            Kind::Akp03 => codes::VENDOR_ID_MIRABOX_V2,
+            Kind::Akp03E => codes::VENDOR_ID_MIRABOX_V2,
+            Kind::Akp03R => codes::VENDOR_ID_MIRABOX_V2,
+            Kind::Akp03RRev2 => codes::VENDOR_ID_MIRABOX_V2,
         }
     }
 
     /// Amount of keys the device has
-    pub fn key_count(&self) -> u8 {
+    pub const fn key_count(&self) -> u8 {
         match self {
             Kind::Akp153 | Kind::Akp153E | Kind::Akp153R => 15 + 3,
             Kind::Akp815 => 15,
@@ -118,7 +94,7 @@ impl Kind {
     }
 
     /// Amount of display keys the device has
-    pub fn display_key_count(&self) -> u8 {
+    pub const fn display_key_count(&self) -> u8 {
         match self {
             Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => 6,
             _ => self.key_count(),
@@ -126,16 +102,16 @@ impl Kind {
     }
 
     /// Amount of button rows the device has
-    pub fn row_count(&self) -> u8 {
+    pub const fn row_count(&self) -> u8 {
         match self {
             Kind::Akp153 | Kind::Akp153E | Kind::Akp153R => 3,
             Kind::Akp815 => 5,
-            Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => 3,
+            Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => 2,
         }
     }
 
     /// Amount of button columns the device has
-    pub fn column_count(&self) -> u8 {
+    pub const fn column_count(&self) -> u8 {
         match self {
             Kind::Akp153 | Kind::Akp153E | Kind::Akp153R => 6,
             Kind::Akp815 => 3,
@@ -144,7 +120,7 @@ impl Kind {
     }
 
     /// Amount of encoders/knobs the device has
-    pub fn encoder_count(&self) -> u8 {
+    pub const fn encoder_count(&self) -> u8 {
         match self {
             Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => 3,
             _ => 0,
@@ -152,7 +128,7 @@ impl Kind {
     }
 
     /// Size of the LCD strip on the device
-    pub fn lcd_strip_size(&self) -> Option<(usize, usize)> {
+    pub const fn lcd_strip_size(&self) -> Option<(usize, usize)> {
         match self {
             Kind::Akp153 | Kind::Akp153E | Kind::Akp153R => Some((854, 480)),
             Kind::Akp815 => Some((800, 480)),
@@ -160,18 +136,47 @@ impl Kind {
         }
     }
 
-    /// Tells if the device kind has a screen
-    pub fn is_visual(&self) -> bool {
-        true
+    /// Size of the boot logo on the device
+    pub const fn boot_logo_size(&self) -> Option<(usize, usize)> {
+        match self {
+            Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => Some((320, 240)),
+            _ => self.lcd_strip_size(),
+        }
     }
 
     /// Key layout of the device kind as (rows, columns)
-    pub fn key_layout(&self) -> (u8, u8) {
+    pub const fn key_layout(&self) -> (u8, u8) {
         (self.row_count(), self.column_count())
     }
 
     /// Image format used by the device kind
-    pub fn key_image_format(&self) -> ImageFormat {
+    pub const fn logo_image_format(&self) -> ImageFormat {
+        match self {
+            Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2 => ImageFormat {
+                mode: ImageMode::JPEG,
+                size: (240, 320),
+                rotation: ImageRotation::Rot90,
+                mirror: ImageMirroring::None,
+            },
+
+            Kind::Akp153 | Kind::Akp153E | Kind::Akp153R => ImageFormat {
+                mode: ImageMode::JPEG,
+                size: (854, 480),
+                rotation: ImageRotation::Rot0,
+                mirror: ImageMirroring::None,
+            },
+
+            Kind::Akp815 => ImageFormat {
+                mode: ImageMode::JPEG,
+                size: (800, 480),
+                rotation: ImageRotation::Rot0,
+                mirror: ImageMirroring::None,
+            },
+        }
+    }
+
+    /// Image format used by the device kind
+    pub const fn key_image_format(&self) -> ImageFormat {
         match self {
             Kind::Akp153 | Kind::Akp153E | Kind::Akp153R => ImageFormat {
                 mode: ImageMode::JPEG,
@@ -203,103 +208,24 @@ impl Kind {
         }
     }
 
-    /// Returns blank image data appropriate for the device kind
-    pub fn blank_image(&self) -> Vec<u8> {
-        vec![
-            0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xff, 0xdb, 0x00, 0x43, 0x00, 0x08, 0x06, 0x06, 0x07, 0x06,
-            0x05, 0x08, 0x07, 0x07, 0x07, 0x09, 0x09, 0x08, 0x0a, 0x0c, 0x14, 0x0d, 0x0c, 0x0b, 0x0b, 0x0c, 0x19, 0x12, 0x13, 0x0f, 0x14, 0x1d, 0x1a, 0x1f, 0x1e, 0x1d, 0x1a, 0x1c, 0x1c, 0x20,
-            0x24, 0x2e, 0x27, 0x20, 0x22, 0x2c, 0x23, 0x1c, 0x1c, 0x28, 0x37, 0x29, 0x2c, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1f, 0x27, 0x39, 0x3d, 0x38, 0x32, 0x3c, 0x2e, 0x33, 0x34, 0x32, 0xff,
-            0xdb, 0x00, 0x43, 0x01, 0x09, 0x09, 0x09, 0x0c, 0x0b, 0x0c, 0x18, 0x0d, 0x0d, 0x18, 0x32, 0x21, 0x1c, 0x21, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32,
-            0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32,
-            0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x00, 0x48, 0x00, 0x48, 0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01, 0xff, 0xc4, 0x00,
-            0x1f, 0x00, 0x00, 0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-            0xff, 0xc4, 0x00, 0xb5, 0x10, 0x00, 0x02, 0x01, 0x03, 0x03, 0x02, 0x04, 0x03, 0x05, 0x05, 0x04, 0x04, 0x00, 0x00, 0x01, 0x7d, 0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21,
-            0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08, 0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a,
-            0x16, 0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56,
-            0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93,
-            0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6,
-            0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-            0xf8, 0xf9, 0xfa, 0xff, 0xc4, 0x00, 0x1f, 0x01, 0x00, 0x03, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0xff, 0xc4, 0x00, 0xb5, 0x11, 0x00, 0x02, 0x01, 0x02, 0x04, 0x04, 0x03, 0x04, 0x07, 0x05, 0x04, 0x04, 0x00, 0x01, 0x02, 0x77, 0x00, 0x01, 0x02,
-            0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0, 0x15,
-            0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34, 0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47,
-            0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x82, 0x83, 0x84,
-            0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7,
-            0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea,
-            0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xff, 0xda, 0x00, 0x0c, 0x03, 0x01, 0x00, 0x02, 0x11, 0x03, 0x11, 0x00, 0x3f, 0x00, 0xf9, 0xfe, 0x8a, 0x28, 0xa0, 0x02, 0x8a,
-            0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0,
-            0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a,
-            0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0, 0x02, 0x8a, 0x28, 0xa0,
-            0x02, 0x8a, 0x28, 0xa0, 0x0f, 0xff, 0xd9,
-        ]
-    }
-
     /// Returns true for devices with 512 byte packet length
-    pub fn is_ajazz_v1(&self) -> bool {
-        matches!(self, Kind::Akp153 | Kind::Akp153E | Kind::Akp153R | Kind::Akp815)
+    pub const fn is_v1_api(&self) -> bool {
+        matches!(
+            self,
+            Kind::Akp153 | Kind::Akp153E | Kind::Akp153R | Kind::Akp815
+        )
     }
 
     /// Returns true for devices with 1024 byte packet length
-    pub fn is_ajazz_v2(&self) -> bool {
-        matches!(self, Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2)
+    pub const fn is_v2_api(&self) -> bool {
+        self.is_akp03()
     }
-}
 
-/// Image format used by the device
-#[derive(Copy, Clone, Debug, Hash)]
-pub struct ImageFormat {
-    /// Image format/mode
-    pub mode: ImageMode,
-    /// Image size
-    pub size: (usize, usize),
-    /// Image rotation
-    pub rotation: ImageRotation,
-    /// Image mirroring
-    pub mirror: ImageMirroring,
-}
-
-impl Default for ImageFormat {
-    fn default() -> Self {
-        Self {
-            mode: ImageMode::None,
-            size: (0, 0),
-            rotation: ImageRotation::Rot0,
-            mirror: ImageMirroring::None,
-        }
+    /// Returns true for devices is Ajazz AKP03
+    pub const fn is_akp03(&self) -> bool {
+        matches!(
+            self,
+            Kind::Akp03 | Kind::Akp03E | Kind::Akp03R | Kind::Akp03RRev2
+        )
     }
-}
-
-/// Image rotation
-#[derive(Copy, Clone, Debug, Hash)]
-pub enum ImageRotation {
-    /// No rotation
-    Rot0,
-    /// 90 degrees clockwise
-    Rot90,
-    /// 180 degrees
-    Rot180,
-    /// 90 degrees counter-clockwise
-    Rot270,
-}
-
-/// Image mirroring
-#[derive(Copy, Clone, Debug, Hash)]
-pub enum ImageMirroring {
-    /// No image mirroring
-    None,
-    /// Flip by X
-    X,
-    /// Flip by Y
-    Y,
-    /// Flip by both axes
-    Both,
-}
-
-/// Image format
-#[derive(Copy, Clone, Debug, Hash)]
-pub enum ImageMode {
-    /// No image
-    None,
-    /// Jpeg image
-    JPEG,
 }
