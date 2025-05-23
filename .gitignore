@@ -11,3 +11,5 @@
 
 # MacOS junk
 .DS_Store
+
+.cursor/
