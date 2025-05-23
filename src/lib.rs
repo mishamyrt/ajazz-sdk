@@ -115,7 +115,7 @@ impl AjazzInput {
 
 /// Tells what changed in button states
 #[derive(Copy, Clone, Debug, Hash)]
-pub enum DeviceStateUpdate {
+pub enum Event {
     /// Button got pressed down
     ButtonDown(u8),
 

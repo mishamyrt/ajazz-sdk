@@ -9,7 +9,7 @@ use image::DynamicImage;
 use crate::images::{convert_image, WriteImageParameters};
 use crate::info::Kind;
 use crate::protocol::{codes, extract_string, request, AjazzProtocolParser, AjazzRequestBuilder};
-use crate::{convert_image_with_format, AjazzError, AjazzInput, DeviceState, DeviceStateUpdate};
+use crate::{convert_image_with_format, AjazzError, AjazzInput, DeviceState, Event};
 
 /// Interface for an Ajazz device
 pub struct Ajazz {
@@ -375,7 +375,7 @@ pub struct DeviceStateReader {
 pub(crate) fn handle_input_state_change(
     input: AjazzInput,
     current_state: &mut DeviceState,
-) -> Result<Vec<DeviceStateUpdate>, AjazzError> {
+) -> Result<Vec<Event>, AjazzError> {
     let mut updates = vec![];
     match input {
         AjazzInput::ButtonStateChange(buttons) => {
@@ -386,9 +386,9 @@ pub(crate) fn handle_input_state_change(
 
                 current_state.buttons[index] = !current_state.buttons[index];
                 if current_state.buttons[index] {
-                    updates.push(DeviceStateUpdate::ButtonDown(index as u8));
+                    updates.push(Event::ButtonDown(index as u8));
                 } else {
-                    updates.push(DeviceStateUpdate::ButtonUp(index as u8));
+                    updates.push(Event::ButtonUp(index as u8));
                 }
             }
         }
@@ -401,9 +401,9 @@ pub(crate) fn handle_input_state_change(
 
                 current_state.encoders[index] = !current_state.encoders[index];
                 if current_state.encoders[index] {
-                    updates.push(DeviceStateUpdate::EncoderDown(index as u8));
+                    updates.push(Event::EncoderDown(index as u8));
                 } else {
-                    updates.push(DeviceStateUpdate::EncoderUp(index as u8));
+                    updates.push(Event::EncoderUp(index as u8));
                 }
             }
         }
@@ -411,7 +411,7 @@ pub(crate) fn handle_input_state_change(
         AjazzInput::EncoderTwist(twist) => {
             for (index, change) in twist.iter().enumerate() {
                 if *change != 0 {
-                    updates.push(DeviceStateUpdate::EncoderTwist(index as u8, *change));
+                    updates.push(Event::EncoderTwist(index as u8, *change));
                 }
             }
         }
@@ -427,7 +427,7 @@ impl DeviceStateReader {
     pub fn read(
         &self,
         timeout: Option<Duration>,
-    ) -> Result<Vec<DeviceStateUpdate>, AjazzError> {
+    ) -> Result<Vec<Event>, AjazzError> {
         let input = self.device.read_input(timeout)?;
         let mut current_state = self.states.lock().map_err(|_| AjazzError::PoisonError)?;
 

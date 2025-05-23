@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 use tokio::task::block_in_place;
 use tokio::time::sleep;
 
-use crate::{AjazzError, AjazzInput, DeviceState, DeviceStateUpdate, Kind};
+use crate::{AjazzError, AjazzInput, DeviceState, Event, Kind};
 use crate::device::{handle_input_state_change, Ajazz};
 use crate::hid::list_devices;
 use crate::images::convert_image_async;
@@ -188,7 +188,7 @@ pub struct AsyncDeviceStateReader {
 
 impl AsyncDeviceStateReader {
     /// Reads states and returns updates
-    pub async fn read(&self, poll_rate: f32) -> Result<Vec<DeviceStateUpdate>, AjazzError> {
+    pub async fn read(&self, poll_rate: f32) -> Result<Vec<Event>, AjazzError> {
         let input = self.device.read_input(poll_rate).await?;
         let mut current_state = self.states.lock().await;
 
