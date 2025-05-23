@@ -17,7 +17,6 @@ mod device;
 mod protocol;
 mod hid;
 
-
 pub use info::Kind;
 pub use device::{Ajazz, DeviceStateReader};
 pub use images::{
