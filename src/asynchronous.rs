@@ -51,6 +51,21 @@ impl AsyncAjazz {
             device: Arc::new(Mutex::new(device)),
         })
     }
+
+    /// Attempts to connect to the device, can be safely ran inside [multi_thread](tokio::runtime::Builder::new_multi_thread) runtime
+    pub fn connect_with_retries(
+        hidapi: &HidApi,
+        kind: Kind,
+        serial: &str,
+        attempts: u8,
+    ) -> Result<AsyncAjazz, AjazzError> {
+        let device = block_in_place(move || Ajazz::connect_with_retries(hidapi, kind, serial, attempts))?;
+
+        Ok(AsyncAjazz {
+            kind,
+            device: Arc::new(Mutex::new(device)),
+        })
+    }
 }
 
 /// Instance methods of the struct

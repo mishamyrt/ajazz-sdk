@@ -31,7 +31,35 @@ struct ImageCache {
 /// Static functions of the struct
 impl Ajazz {
     /// Attempts to connect to the device
+    /// If the connection fails, it will retry up to `attempts` times
+    /// If the connection fails after `attempts` retries, it will return an last error
+    pub fn connect_with_retries(hidapi: &HidApi, kind: Kind, serial: &str, attempts: u8) -> Result<Ajazz, AjazzError> {
+        if attempts == 0 {
+            return Err(AjazzError::UnsupportedOperation);
+        }
+
+        let mut last_error = None;
+        for _ in 0..attempts {
+            match Self::try_connect(hidapi, kind, serial) {
+                Ok(device) => return Ok(device),
+                Err(e) => {
+                    std::thread::sleep(Duration::from_millis(100));
+                    last_error = Some(e);
+                    continue;
+                }
+            }
+        }
+
+        Err(last_error.expect("error must never be empty at this point"))
+    }
+
+    /// Attempts to connect to the device
     pub fn connect(hidapi: &HidApi, kind: Kind, serial: &str) -> Result<Ajazz, AjazzError> {
+        Self::try_connect(hidapi, kind, serial)
+    }
+
+    // Internal function to connect to the device
+    fn try_connect(hidapi: &HidApi, kind: Kind, serial: &str) -> Result<Ajazz, AjazzError> {
         let device = hidapi.open_serial(kind.vendor_id(), kind.product_id(), serial)?;
 
         Ok(Ajazz {

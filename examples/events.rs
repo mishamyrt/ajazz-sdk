@@ -16,7 +16,7 @@ fn main() {
     let devices = list_devices(&hid);
     let (kind, serial) = devices.first().unwrap();
 
-    let Ok(device) = Ajazz::connect(&hid, *kind, serial) else {
+    let Ok(device) = Ajazz::connect_with_retries(&hid, *kind, serial, 10) else {
         println!("Failed to connect");
         return;
     };
