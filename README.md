@@ -1,4 +1,4 @@
-# Ajazz SDK
+# Ajazz SDK [![Quality Assurance](https://github.com/mishamyrt/ajazz-sdk/actions/workflows/qa.yaml/badge.svg)](https://github.com/mishamyrt/ajazz-sdk/actions/workflows/qa.yaml)
 
 Rust library for interacting with Ajazz Stream Docks.
 
