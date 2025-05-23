@@ -138,6 +138,13 @@ impl AsyncAjazz {
         block_in_place(move || device.set_button_image_data(key, &image))
     }
 
+    /// Sets specified button's image, changes must be flushed with `.flush()` before
+    /// they will appear on the device!
+    pub async fn set_button_image_data(&self, key: u8, image_data: &[u8]) -> Result<(), AjazzError> {
+        let device = self.device.lock().await;
+        block_in_place(move || device.set_button_image_data(key, image_data))
+    }
+
     /// Set logo image
     pub async fn set_logo_image(&self, image: DynamicImage) -> Result<(), AjazzError> {
         let device = self.device.lock().await;
