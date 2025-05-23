@@ -49,13 +49,17 @@ impl DisplayManager {
         // Set food images
         for i in 0..self.display_key_count {
             if game_state.has_food(i) && i != game_state.pacman_position {
-                device.set_button_image(i, (*self.assets.food).clone()).await?;
+                device
+                    .set_button_image(i, (*self.assets.food).clone())
+                    .await?;
             }
         }
 
         // Set pacman image
         let pacman_image = self.get_pacman_image(game_state);
-        device.set_button_image(game_state.pacman_position, pacman_image).await?;
+        device
+            .set_button_image(game_state.pacman_position, pacman_image)
+            .await?;
         device.flush().await?;
 
         Ok(())
@@ -80,7 +84,9 @@ impl DisplayManager {
         // Update current pacman position if state changed
         if game_state.has_state_changed() {
             let pacman_image = self.get_pacman_image(game_state);
-            device.set_button_image(game_state.pacman_position, pacman_image).await?;
+            device
+                .set_button_image(game_state.pacman_position, pacman_image)
+                .await?;
         }
 
         device.flush().await?;
@@ -94,7 +100,9 @@ impl DisplayManager {
         pacman_position: u8,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if position != pacman_position {
-            device.set_button_image(position, (*self.assets.food).clone()).await?;
+            device
+                .set_button_image(position, (*self.assets.food).clone())
+                .await?;
             device.flush().await?;
         }
         Ok(())

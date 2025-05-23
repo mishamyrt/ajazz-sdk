@@ -17,14 +17,11 @@ mod device;
 mod protocol;
 mod hid;
 
+
 pub use info::Kind;
 pub use device::{Ajazz, DeviceStateReader};
 pub use images::{
-    convert_image,
-    convert_image_with_format,
-    ImageFormat,
-    ImageMode,
-    ImageMirroring,
+    convert_image, convert_image_with_format, ImageFormat, ImageMode, ImageMirroring,
     ImageRect, ImageRotation,
 };
 pub use hid::{new_hidapi, refresh_device_list, list_devices};

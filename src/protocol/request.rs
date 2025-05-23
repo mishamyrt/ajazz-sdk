@@ -35,8 +35,7 @@ static REQUEST_CLEAR_BUTTON_IMAGE: Lazy<Vec<u8>> =
     Lazy::new(|| format_request(codes::REQUEST_CMD_CLEAR_BUTTON_IMAGE));
 
 /// Request for flush command
-static REQUEST_FLUSH: Lazy<Vec<u8>> =
-    Lazy::new(|| format_request(codes::REQUEST_CMD_FLUSH));
+static REQUEST_FLUSH: Lazy<Vec<u8>> = Lazy::new(|| format_request(codes::REQUEST_CMD_FLUSH));
 
 /// Request for image announce packet
 static REQUEST_IMAGE_ANNOUNCE: Lazy<Vec<u8>> =
@@ -50,12 +49,11 @@ static REQUEST_LOGO_IMAGE_V1: Lazy<Vec<u8>> =
 static REQUEST_LOGO_IMAGE_V2: Lazy<Vec<u8>> =
     Lazy::new(|| format_request(codes::REQUEST_CMD_LOGO_IMAGE_V2));
 
-pub(crate) static FEATURE_REPORT_VERSION: Lazy<Vec<u8>> =
-    Lazy::new(|| {
-        let mut buff = vec![0x00; 20];
-        buff.insert(0, codes::FEATURE_REPORT_ID_VERSION);
-        buff
-    });
+pub(crate) static FEATURE_REPORT_VERSION: Lazy<Vec<u8>> = Lazy::new(|| {
+    let mut buff = vec![0x00; 20];
+    buff.insert(0, codes::FEATURE_REPORT_ID_VERSION);
+    buff
+});
 
 pub(crate) trait AjazzRequestBuilder {
     fn brightness_packet(&self, percent: u8) -> Vec<u8>;
@@ -291,7 +289,13 @@ mod tests {
     fn test_image_announce_packet() {
         let kind = Kind::Akp03RRev2;
         let packet = kind.image_announce_packet(0, &[0x00, 0x01]);
-        let expected = padded_packet(kind, vec![0x00, 0x43, 0x52, 0x54, 0x00, 0x00, 0x42, 0x41, 0x54, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00]);
+        let expected = padded_packet(
+            kind,
+            vec![
+                0x00, 0x43, 0x52, 0x54, 0x00, 0x00, 0x42, 0x41, 0x54, 0x00, 0x00, 0x00, 0x02,
+                0x00, 0x00, 0x00,
+            ],
+        );
         assert_eq!(packet, expected);
     }
 
@@ -299,7 +303,13 @@ mod tests {
     fn test_logo_image_packet() {
         let kind = Kind::Akp153;
         let packet = kind.logo_image_packet(&[0x00, 0x01]);
-        let expected = padded_packet(kind, vec![0x00, 0x43, 0x52, 0x54, 0x00, 0x00, 0x4c, 0x4f, 0x47, 0x00, 0x12, 0xc3, 0xc0, 0x01]);
+        let expected = padded_packet(
+            kind,
+            vec![
+                0x00, 0x43, 0x52, 0x54, 0x00, 0x00, 0x4c, 0x4f, 0x47, 0x00, 0x12, 0xc3, 0xc0,
+                0x01,
+            ],
+        );
         assert_eq!(packet, expected);
     }
 

@@ -87,7 +87,10 @@ impl AjazzProtocolParser for Kind {
     fn index_to_native_v1(&self, key: u8) -> Option<u8> {
         if self.is_v1_api() {
             if key < self.key_count() {
-                Some([12, 9, 6, 3, 0, 15, 13, 10, 7, 4, 1, 16, 14, 11, 8, 5, 2, 17][key as usize])
+                Some(
+                    [12, 9, 6, 3, 0, 15, 13, 10, 7, 4, 1, 16, 14, 11, 8, 5, 2, 17]
+                        [key as usize],
+                )
             } else {
                 Some(key)
             }

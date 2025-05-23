@@ -59,7 +59,9 @@ impl AsyncAjazz {
         serial: &str,
         attempts: u8,
     ) -> Result<AsyncAjazz, AjazzError> {
-        let device = block_in_place(move || Ajazz::connect_with_retries(hidapi, kind, serial, attempts))?;
+        let device = block_in_place(move || {
+            Ajazz::connect_with_retries(hidapi, kind, serial, attempts)
+        })?;
 
         Ok(AsyncAjazz {
             kind,
@@ -155,7 +157,11 @@ impl AsyncAjazz {
 
     /// Sets specified button's image, changes must be flushed with `.flush()` before
     /// they will appear on the device!
-    pub async fn set_button_image_data(&self, key: u8, image_data: &[u8]) -> Result<(), AjazzError> {
+    pub async fn set_button_image_data(
+        &self,
+        key: u8,
+        image_data: &[u8],
+    ) -> Result<(), AjazzError> {
         let device = self.device.lock().await;
         block_in_place(move || device.set_button_image_data(key, image_data))
     }

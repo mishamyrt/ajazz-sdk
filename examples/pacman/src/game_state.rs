@@ -81,7 +81,10 @@ impl GameState {
     }
 
     pub fn has_food(&self, position: u8) -> bool {
-        self.food_positions.get(position as usize).copied().unwrap_or(false)
+        self.food_positions
+            .get(position as usize)
+            .copied()
+            .unwrap_or(false)
     }
 
     pub fn has_state_changed(&self) -> bool {

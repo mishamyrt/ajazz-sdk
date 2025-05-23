@@ -1,12 +1,10 @@
 [package]
 name = "screen_mirroring"
 edition = "2021"
+publish = false
 
 [dependencies]
 image = { version = "0.25.1", default-features = false, features = ["bmp", "jpeg"] }
-tokio = { version = "1", optional = false, features = ["full"] }
-async-recursion = { version = "1.0.2", optional = false }
-enigo = { git = "https://github.com/UE2020/enigo", rev = "4e61dfcb83e35445c4b9e75f24c4ef29fa598ce9" }
-ajazz-sdk = { path = "../../", features = ["async"]}
+ajazz-sdk = { path = "../../"}
 scap = "0.0.8"
 rustyline = "14.0"

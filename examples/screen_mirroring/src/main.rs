@@ -1,36 +1,17 @@
-use image::{open, DynamicImage, ImageBuffer, Rgb, Rgba};
-use std::time::Duration;
+use image::{DynamicImage, ImageBuffer, Rgb};
 use rustyline::Editor;
 
 use ajazz_sdk::{list_devices, new_hidapi, AjazzError, Ajazz};
-use scap::{
-    capturer::{Area, Point, Size},
-    Target,
-};
-use tokio::time::sleep;
+use scap::Target;
 
 mod layout;
 
-fn connect_deck() -> Ajazz {
-    let hid = match new_hidapi() {
-        Ok(hid) => hid,
-        Err(e) => {
-            panic!("Failed to create HidApi instance: {}", e);
-        }
-    };
-
-    let devices = list_devices(&hid);
-    let (kind, serial) = devices.first().unwrap();
-
-    Ajazz::connect_with_retries(&hid, *kind, serial, 10).unwrap()
-}
-
 fn select_display() -> Target {
     let targets = scap::get_all_targets();
-    let displays: Vec<&Target> = targets.iter().filter(|target| match target {
-        Target::Display(_) => true,
-        _ => false,
-    }).collect();
+    let displays: Vec<&Target> = targets
+        .iter()
+        .filter(|target| matches!(target, Target::Display(_)))
+        .collect();
 
     if displays.is_empty() {
         panic!("No displays found for capture");
@@ -58,7 +39,10 @@ fn select_display() -> Target {
                     if choice >= 1 && choice <= displays.len() {
                         return displays[choice - 1].clone();
                     } else {
-                        println!("Invalid choice. Enter a number from 1 to {}", displays.len());
+                        println!(
+                            "Invalid choice. Enter a number from 1 to {}",
+                            displays.len()
+                        );
                     }
                 } else {
                     println!("Invalid input. Enter a number.");
@@ -72,10 +56,7 @@ fn select_display() -> Target {
     }
 }
 
-fn render_buttons(
-    device: &Ajazz,
-    frame: &scap::frame::RGBFrame,
-) -> Result<(), AjazzError> {
+fn render_buttons(device: &Ajazz, frame: &scap::frame::RGBFrame) -> Result<(), AjazzError> {
     let image_buffer = ImageBuffer::<Rgb<u8>, _>::from_raw(
         frame.width as u32,
         frame.height as u32,
@@ -85,17 +66,25 @@ fn render_buttons(
 
     let dyn_image = DynamicImage::ImageRgb8(image_buffer);
 
-    let (button_size, button_rects) = layout::calculate_button_rect(frame.width as u32, frame.height as u32);
+    let (button_size, button_rects) =
+        layout::calculate_button_rect(frame.width as u32, frame.height as u32);
 
     for (i, rect) in button_rects.iter().enumerate() {
         if rect.x + button_size > dyn_image.width() {
-            panic!("Invalid width: {} + {} > {}", rect.x, button_size, dyn_image.width());
+            panic!(
+                "Invalid width: {} + {} > {}",
+                rect.x,
+                button_size,
+                dyn_image.width()
+            );
         }
 
         if rect.y + button_size > dyn_image.height() {
             panic!(
                 "Invalid height: {} + {} > {}",
-                rect.y, button_size, dyn_image.height()
+                rect.y,
+                button_size,
+                dyn_image.height()
             );
         }
 

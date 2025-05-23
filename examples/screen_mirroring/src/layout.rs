@@ -9,7 +9,7 @@ const FIRST_COLUMN_X: f32 = 0.0;
 const SECOND_COLUMN_X: f32 = 0.384_057_97;
 const THIRD_COLUMN_X: f32 = 0.768_115_94;
 const FIRST_ROW_Y: f32 = 0.0;
-const SECOND_ROW_Y: f32 = 0.625_730_99;
+const SECOND_ROW_Y: f32 = 0.625_731;
 
 fn get_offset_ratios(index: usize) -> (f32, f32) {
     match index {
@@ -26,16 +26,15 @@ fn get_offset_ratios(index: usize) -> (f32, f32) {
 pub(crate) fn calculate_button_rect(width: u32, height: u32) -> (u32, Vec<ButtonRect>) {
     let button_size = (BUTTON_SIZE * width as f32) as u32;
 
-    let button_rects = (0..6).into_iter().map(|index| {
-        let (x_offset, y_offset) = get_offset_ratios(index);
-        let x = (x_offset * (width as f32)) as u32;
-        let y = (y_offset * (height as f32)) as u32;
+    let button_rects = (0..6)
+        .map(|index| {
+            let (x_offset, y_offset) = get_offset_ratios(index);
+            let x = (x_offset * (width as f32)) as u32;
+            let y = (y_offset * (height as f32)) as u32;
 
-        ButtonRect {
-            x,
-            y,
-        }
-    }).collect();
+            ButtonRect { x, y }
+        })
+        .collect();
 
     (button_size, button_rects)
 }
@@ -63,6 +62,5 @@ mod tests {
         assert_eq!(button_rects[4].y, 300);
         assert_eq!(button_rects[5].x, 491);
         assert_eq!(button_rects[5].y, 300);
-
     }
 }

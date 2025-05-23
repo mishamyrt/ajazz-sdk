@@ -162,14 +162,24 @@ async fn run_game_for_device(
         let device = device.clone();
         let game_state = game_state.clone();
         let display_manager = display_manager.clone();
-        tokio::spawn(handle_input_events(device, game_state, display_manager, display_key_count))
+        tokio::spawn(handle_input_events(
+            device,
+            game_state,
+            display_manager,
+            display_key_count,
+        ))
     };
 
     let game_task = {
         let device = device.clone();
         let game_state = game_state.clone();
         let display_manager = display_manager.clone();
-        tokio::spawn(run_game_loop(device, game_state, display_manager, display_key_count))
+        tokio::spawn(run_game_loop(
+            device,
+            game_state,
+            display_manager,
+            display_key_count,
+        ))
     };
 
     println!("Pacman game started!");
@@ -205,7 +215,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (kind, serial) in devices {
         println!("Found device: {:?} {} {}", kind, serial, kind.product_id());
 
-        let device = AsyncAjazz::connect_with_retries(&hid, kind, &serial, MAX_CONNECTION_RETRIES)?;
+        let device =
+            AsyncAjazz::connect_with_retries(&hid, kind, &serial, MAX_CONNECTION_RETRIES)?;
 
         println!(
             "Connected to '{}' with firmware version '{}'",

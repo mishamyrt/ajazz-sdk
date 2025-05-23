@@ -33,7 +33,12 @@ impl Ajazz {
     /// Attempts to connect to the device
     /// If the connection fails, it will retry up to `attempts` times
     /// If the connection fails after `attempts` retries, it will return an last error
-    pub fn connect_with_retries(hidapi: &HidApi, kind: Kind, serial: &str, attempts: u8) -> Result<Ajazz, AjazzError> {
+    pub fn connect_with_retries(
+        hidapi: &HidApi,
+        kind: Kind,
+        serial: &str,
+        attempts: u8,
+    ) -> Result<Ajazz, AjazzError> {
         if attempts == 0 {
             return Err(AjazzError::UnsupportedOperation);
         }
@@ -274,12 +279,10 @@ impl Ajazz {
         }
 
         let image_data = convert_image_with_format(self.kind.logo_image_format(), image)?;
-        self.hid.write(self.kind.logo_image_packet(&image_data).as_slice())?;
+        self.hid
+            .write(self.kind.logo_image_packet(&image_data).as_slice())?;
         self.hid.write(self.kind.flush_packet().as_slice())?;
-        self.write_image_data_reports(
-            &image_data,
-            WriteImageParameters::for_kind(self.kind),
-        )?;
+        self.write_image_data_reports(&image_data, WriteImageParameters::for_kind(self.kind))?;
         self.assert_write_complete()?;
 
         Ok(())
@@ -452,10 +455,7 @@ pub(crate) fn handle_input_state_change(
 
 impl DeviceStateReader {
     /// Reads states and returns updates
-    pub fn read(
-        &self,
-        timeout: Option<Duration>,
-    ) -> Result<Vec<Event>, AjazzError> {
+    pub fn read(&self, timeout: Option<Duration>) -> Result<Vec<Event>, AjazzError> {
         let input = self.device.read_input(timeout)?;
         let mut current_state = self.states.lock().map_err(|_| AjazzError::PoisonError)?;
 
